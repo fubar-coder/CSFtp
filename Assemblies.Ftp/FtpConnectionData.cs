@@ -5,7 +5,7 @@ namespace Assemblies.Ftp
 	/// <summary>
 	/// Contains all the data relating to a particular FTP connection
 	/// </summary>
-	class FtpConnectionData
+	public class FtpConnectionData
 	{
 		#region Member Variables
 

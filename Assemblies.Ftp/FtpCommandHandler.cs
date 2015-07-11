@@ -1,12 +1,13 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Assemblies.Ftp.FtpCommands
 {
 	/// <summary>
 	/// Base class for all ftp command handlers.
 	/// </summary>
-	class FtpCommandHandler
+	public abstract class FtpCommandHandler
 	{
 		#region Member Variables
 
@@ -47,20 +48,16 @@ namespace Assemblies.Ftp.FtpCommands
 
 		#region Methods
 
-		public void Process(string sMessage)
+		public async Task Process(string sMessage)
 		{
-			SendMessage(OnProcess(sMessage));
+			await SendMessage(await OnProcess(sMessage));
 		}
 
-		protected virtual string OnProcess(string sMessage)
-		{
-			System.Diagnostics.Debug.Assert(false, "FtpCommandHandler::OnProcess base called");
-			return "";
-		}
+	    protected abstract Task<string> OnProcess(string sMessage);
 
-		protected string GetMessage(int nReturnCode, string sMessage)
+		protected Task<string> GetMessage(int nReturnCode, string sMessage)
 		{
-			return string.Format("{0} {1}\r\n", nReturnCode, sMessage);
+			return Task.FromResult(string.Format("{0} {1}\r\n", nReturnCode, sMessage));
 		}
 
 		protected string GetPath(string sPath)
@@ -75,14 +72,12 @@ namespace Assemblies.Ftp.FtpCommands
 			return Path.Combine(m_theConnectionObject.CurrentDirectory, sPath);
 		}
 
-		private void SendMessage(string sMessage)
+		protected async Task SendMessage(string sMessage)
 		{
-			if (sMessage.Length == 0)
-			{
-				return;
-			}
+		    if (string.IsNullOrEmpty(sMessage))
+		        return;
 
-			int nEndIndex = sMessage.IndexOf('\r');
+		    int nEndIndex = sMessage.IndexOf('\r');
 
 			if (nEndIndex < 0)
 			{
@@ -93,7 +88,7 @@ namespace Assemblies.Ftp.FtpCommands
 				FtpServerMessageHandler.SendMessage(m_theConnectionObject.Id, sMessage.Substring(0, nEndIndex));
 			}
 
-			Assemblies.General.SocketHelpers.Send(ConnectionObject.Socket, sMessage);
+            await Assemblies.General.SocketHelpers.Send(ConnectionObject.Socket, sMessage);
 		}
 
 		#endregion

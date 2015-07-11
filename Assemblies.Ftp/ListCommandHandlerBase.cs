@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Assemblies.Ftp.FtpCommands
 {
@@ -14,9 +15,9 @@ namespace Assemblies.Ftp.FtpCommands
 			
 		}
 
-		protected override string OnProcess(string sMessage)
+        protected override async Task<string> OnProcess(string sMessage)
 		{
-			Assemblies.General.SocketHelpers.Send(ConnectionObject.Socket, "150 Opening data connection for LIST\r\n");
+			await Assemblies.General.SocketHelpers.Send(ConnectionObject.Socket, "150 Opening data connection for LIST\r\n");
 
 			string [] asFiles = null;
 			string [] asDirectories = null;
@@ -43,13 +44,13 @@ namespace Assemblies.Ftp.FtpCommands
 
 			if (!socketReply.Loaded)
 			{
-				return GetMessage(550, "LIST unable to establish return connection.");
+				return await GetMessage(550, "LIST unable to establish return connection.");
 			}
 			
-			socketReply.Send(sFileList);
+			await socketReply.Send(sFileList);
 			socketReply.Close();
 
-			return GetMessage(226, "LIST successful.");
+			return await GetMessage(226, "LIST successful.");
 		}
 
 		protected abstract string BuildReply(string sMessage, string [] asFiles);

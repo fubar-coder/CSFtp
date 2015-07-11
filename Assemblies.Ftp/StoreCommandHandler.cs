@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Assemblies.Ftp.FtpCommands
 {
@@ -12,13 +13,13 @@ namespace Assemblies.Ftp.FtpCommands
 			
 		}
 
-		protected override string OnProcess(string sMessage)
+        protected override async Task<string> OnProcess(string sMessage)
 		{
 			string sFile = GetPath(sMessage);
 			
 			if (ConnectionObject.FileSystemObject.FileExists(sFile))
 			{
-				return GetMessage(553, "File already exists.");
+				return await GetMessage(553, "File already exists.");
 			}
 
 			FileSystem.IFile file = ConnectionObject.FileSystemObject.OpenFile(sFile, true);
@@ -27,12 +28,12 @@ namespace Assemblies.Ftp.FtpCommands
 
 			if (!socketReply.Loaded)
 			{
-				return GetMessage(425, "Error in establishing data connection.");
+				return await GetMessage(425, "Error in establishing data connection.");
 			}
 
 			byte [] abData = new byte[m_nBufferSize];
 
-			Assemblies.General.SocketHelpers.Send(ConnectionObject.Socket, GetMessage(150, "Opening connection for data transfer."));
+			await Assemblies.General.SocketHelpers.Send(ConnectionObject.Socket, await GetMessage(150, "Opening connection for data transfer."));
 
 			int nReceived = socketReply.Receive(abData);
 
@@ -45,7 +46,7 @@ namespace Assemblies.Ftp.FtpCommands
 			file.Close();
 			socketReply.Close();
 
-			return GetMessage(226, "Uploaded file successfully.");
+			return await GetMessage(226, "Uploaded file successfully.");
 		}
 	}
 }

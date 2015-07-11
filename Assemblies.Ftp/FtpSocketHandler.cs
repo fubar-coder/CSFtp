@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Assemblies.Ftp
 {
@@ -63,7 +64,7 @@ namespace Assemblies.Ftp
 
 				while (nReceived > 0)
 				{
-					m_theCommands.Process(abData);
+					m_theCommands.Process(abData).Wait();
 
 					nReceived = m_theSocket.GetStream().Read(abData, 0, m_nBufferSize);
 				}
@@ -74,6 +75,9 @@ namespace Assemblies.Ftp
 			catch (System.IO.IOException)
 			{
 			}
+            catch (InvalidOperationException)
+            {
+            }
 
 			FtpServerMessageHandler.SendMessage(m_nId, "Connection closed");
 

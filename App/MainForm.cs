@@ -28,6 +28,8 @@ namespace CSFtp
 
 		private System.ComponentModel.Container components = null;
 
+	    private bool m_isClosing = false;
+
 		#endregion
 
 		#region Construction
@@ -192,30 +194,42 @@ namespace CSFtp
 
 		private void MainForm_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
+		    m_isClosing = true;
 			m_theFtpServer.Stop();
 		}
 
 		private void MessageHandler_Message(int nId, string sMessage)
 		{
-			m_listBoxMessages.BeginUpdate();
+            if (m_isClosing)
+                return;
+		    var writeMessageAction = new Action(
+		        () =>
+		            {
+		                m_listBoxMessages.BeginUpdate();
 
-			int nItem = m_listBoxMessages.Items.Add(string.Format("({0}) <{1}> {2}", nId, System.DateTime.Now, sMessage));
+		                int nItem = m_listBoxMessages.Items.Add(string.Format("({0}) <{1}> {2}", nId, System.DateTime.Now, sMessage));
 
-			if (m_listBoxMessages.Items.Count > 5000)
-			{
-				m_listBoxMessages.Items.RemoveAt(0);
-			}
+		                if (m_listBoxMessages.Items.Count > 5000)
+		                {
+		                    m_listBoxMessages.Items.RemoveAt(0);
+		                }
 
-			if (m_listBoxMessages.SelectedIndex < 0)
-			{
-				m_listBoxMessages.TopIndex = nItem;
-			}
-			else if (m_listBoxMessages.SelectedIndex == nItem - 1)
-			{
-				m_listBoxMessages.SelectedIndex = nItem;
-			}
+		                if (m_listBoxMessages.SelectedIndex < 0)
+		                {
+		                    m_listBoxMessages.TopIndex = nItem;
+		                }
+		                else if (m_listBoxMessages.SelectedIndex == nItem - 1)
+		                {
+		                    m_listBoxMessages.SelectedIndex = nItem;
+		                }
 
-			m_listBoxMessages.EndUpdate();
+		                m_listBoxMessages.EndUpdate();
+		            });
+
+		    if (m_listBoxMessages.InvokeRequired)
+		        m_listBoxMessages.Invoke(writeMessageAction);
+		    else
+		        writeMessageAction();
 		}
 
 		private void m_theFtpServer_ConnectionClosed(int nId)

@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Assemblies.Ftp.FtpCommands
 {
@@ -10,7 +11,7 @@ namespace Assemblies.Ftp.FtpCommands
 			
 		}
 
-		protected override string OnProcess(string sMessage)
+		protected override Task<string> OnProcess(string sMessage)
 		{
 			string sPath = GetPath(sMessage);
 

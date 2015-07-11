@@ -1,11 +1,12 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Assemblies.Ftp
 {
 	/// <summary>
 	/// Processes incoming messages and passes the data on to the relevant handler class.
 	/// </summary>
-	class FtpConnectionObject : FtpConnectionData
+	public class FtpConnectionObject : FtpConnectionData
 	{
 		#region Member Variables
 
@@ -75,7 +76,7 @@ namespace Assemblies.Ftp
 			m_theCommandHashTable.Add(handler.Command, handler);
 		}
 
-		public void Process(Byte [] abData)
+		public async Task Process(Byte [] abData)
 		{
 			string sMessage = System.Text.Encoding.ASCII.GetString(abData);
 			sMessage = sMessage.Substring(0, sMessage.IndexOf('\r'));
@@ -103,11 +104,11 @@ namespace Assemblies.Ftp
 			if (handler == null)
 			{
 				FtpServerMessageHandler.SendMessage(Id, string.Format("\"{0}\" : Unknown command", sCommand));
-				Assemblies.General.SocketHelpers.Send(Socket, "550 Unknown command\r\n");
+				await Assemblies.General.SocketHelpers.Send(Socket, "550 Unknown command\r\n");
 			}
 			else
 			{
-				handler.Process(sValue);
+				await handler.Process(sValue);
 			}
 		}
 

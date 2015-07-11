@@ -2,34 +2,32 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Assemblies.General
 {
-	public sealed class SocketHelpers
+	public static class SocketHelpers
 	{
-		private SocketHelpers()
+		static public async Task<bool> Send(TcpClient socket, byte [] abMessage)
 		{
+			return await Send(socket, abMessage, 0, abMessage.Length);
 		}
 
-		static public bool Send(TcpClient socket, byte [] abMessage)
+		static public async Task<bool> Send(TcpClient socket, byte [] abMessage, int nStart)
 		{
-			return Send(socket, abMessage, 0, abMessage.Length);
+			return await Send(socket, abMessage, nStart, abMessage.Length - nStart);
 		}
 
-		static public bool Send(TcpClient socket, byte [] abMessage, int nStart)
-		{
-			return Send(socket, abMessage, nStart, abMessage.Length - nStart);
-		}
-
-		static public bool Send(TcpClient socket, byte [] abMessage, int nStart, int nLength)
+		static public async Task<bool> Send(TcpClient socket, byte [] abMessage, int nStart, int nLength)
 		{
 			bool fReturn = true;
 
 			try
 			{
-				BinaryWriter writer = new BinaryWriter(socket.GetStream());
-				writer.Write(abMessage, nStart, nLength);
-				writer.Flush();
+			    var stream = socket.GetStream();
+			    await stream.WriteAsync(abMessage, nStart, nLength);
+			    await stream.FlushAsync();
 			}
 			catch (IOException)
 			{
@@ -43,38 +41,34 @@ namespace Assemblies.General
 			return fReturn;
 		}
 
-		static public bool Send(TcpClient socket, string sMessage)
+		static public async Task<bool> Send(TcpClient socket, string sMessage)
 		{
 			byte [] abMessage = System.Text.Encoding.ASCII.GetBytes(sMessage);
-			return Send(socket, abMessage);
+			return await Send(socket, abMessage);
 		}
 
 		static public void Close(TcpClient socket)
 		{
-			if (socket == null)
-			{
-				return;
-			}
+		    if (socket == null)
+		        return;
 
-			try
+		    try
 			{
-				if (socket.GetStream() != null)
+                var stream = socket.GetStream();
+                try
 				{
-					try
-					{
-						socket.GetStream().Flush();
-					}
-					catch (SocketException)
-					{
-					}
+				    stream.Flush();
+				}
+				catch (SocketException)
+				{
+				}
 
-					try
-					{
-						socket.GetStream().Close();
-					}
-					catch (SocketException)
-					{
-					}
+				try
+				{
+					stream.Close();
+				}
+				catch (SocketException)
+				{
 				}
 			}
 			catch (SocketException)

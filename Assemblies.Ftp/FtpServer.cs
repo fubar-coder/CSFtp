@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Assemblies.Ftp
 {
@@ -13,7 +15,7 @@ namespace Assemblies.Ftp
 		private System.Net.Sockets.TcpListener m_socketListen = null;
 		private System.Threading.Thread m_theThread = null;
 		private int m_nId = 0;
-		private System.Collections.ArrayList m_apConnections = null;
+        private List<FtpSocketHandler> m_apConnections = null;
 		private int m_nPort = 0;
 		private FileSystem.IFileSystemClassFactory m_fileSystemClassFactory = null;
 
@@ -31,7 +33,7 @@ namespace Assemblies.Ftp
 		
 		public FtpServer(FileSystem.IFileSystemClassFactory fileSystemClassFactory)
 		{
-			m_apConnections = new System.Collections.ArrayList();
+			m_apConnections = new List<FtpSocketHandler>();
 			m_fileSystemClassFactory = fileSystemClassFactory;
 		}
 
@@ -61,11 +63,9 @@ namespace Assemblies.Ftp
 
 		public void Stop()
 		{
-			for (int nConnection = 0 ; nConnection < m_apConnections.Count; nConnection++)
-			{
-				FtpSocketHandler handler = m_apConnections[nConnection] as FtpSocketHandler;
-				handler.Stop();
-			}
+            var connections = new List<FtpSocketHandler>(m_apConnections);
+		    foreach (var handler in connections)
+		        handler.Stop();
 
 			m_socketListen.Stop();
 			m_theThread.Join();
@@ -109,7 +109,7 @@ namespace Assemblies.Ftp
 
 							FtpServerMessageHandler.SendMessage(m_nId, "New connection");
 
-							SendAcceptMessage(socket);
+							SendAcceptMessage(socket).Wait();
 							InitialiseSocketHandler(socket);
 						}
 					}
@@ -121,9 +121,9 @@ namespace Assemblies.Ftp
 			}
 		}
 
-		private void SendAcceptMessage(System.Net.Sockets.TcpClient socket)
+		private async Task SendAcceptMessage(System.Net.Sockets.TcpClient socket)
 		{
-			Assemblies.General.SocketHelpers.Send(socket, System.Text.Encoding.ASCII.GetBytes("220 FTP Server Ready\r\n"));
+			await Assemblies.General.SocketHelpers.Send(socket, System.Text.Encoding.ASCII.GetBytes("220 FTP Server Ready\r\n"));
 		}
 
 		private void InitialiseSocketHandler(System.Net.Sockets.TcpClient socket)

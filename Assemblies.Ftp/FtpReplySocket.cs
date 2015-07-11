@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Assemblies.Ftp
 {
@@ -28,20 +29,20 @@ namespace Assemblies.Ftp
 			m_theSocket = null;
 		}
 
-		public bool Send(byte [] abData, int nSize)
+		public async Task<bool> Send(byte [] abData, int nSize)
 		{
-			return Assemblies.General.SocketHelpers.Send(m_theSocket, abData, 0, nSize);
+			return await Assemblies.General.SocketHelpers.Send(m_theSocket, abData, 0, nSize);
 		}
 
-		public bool Send(char [] abChars, int nSize)
+        public async Task<bool> Send(char[] abChars, int nSize)
 		{
-			return Assemblies.General.SocketHelpers.Send(m_theSocket, System.Text.Encoding.ASCII.GetBytes(abChars), 0, nSize);
+			return await Assemblies.General.SocketHelpers.Send(m_theSocket, System.Text.Encoding.ASCII.GetBytes(abChars), 0, nSize);
 		}
 
-		public bool Send(string sMessage)
+        public async Task<bool> Send(string sMessage)
 		{
 			byte [] abData = System.Text.Encoding.ASCII.GetBytes(sMessage);
-			return Send(abData, abData.Length);
+			return await Send(abData, abData.Length);
 		}
 
 		public int Receive(byte [] abData)
